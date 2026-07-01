@@ -1,6 +1,11 @@
 package br.edu.ifsuldeminas.livraria_springboot_tdd.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 
 @Entity
 @Table(name = "edicoes")
@@ -24,6 +29,7 @@ public class Edicao {
 
     @ManyToOne
     @JoinColumn(name = "livro_id", nullable = false)
+    @JsonBackReference   // evita loop na serialização
     private Livro livro;
 
     public Edicao() {}

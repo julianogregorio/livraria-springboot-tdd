@@ -1,7 +1,9 @@
 package br.edu.ifsuldeminas.livraria_springboot_tdd.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.util.List;
+
 
 @Entity
 @Table(name = "autores")
@@ -18,6 +20,7 @@ public class Autor {
     private String paisOrigem;
 
     @ManyToMany(mappedBy = "autores")
+    @JsonIgnore   // evita loop e erro de referência
     private List<Livro> livros;
 
     public Autor() {}

@@ -1,11 +1,13 @@
 package br.edu.ifsuldeminas.livraria_springboot_tdd.controller;
 
+import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -19,46 +21,52 @@ public class EdicaoIntegrationTest {
 
     @Test
     public void deveCadastrarEdicaoComSucesso() throws Exception {
-        // Primeiro cria um autor
+        // cria autor
         String autorJson = """
             {
-              "nome": "Machado de Assis",
+              "nome": "Autor Teste Edicao",
               "paisOrigem": "Brasil"
             }
         """;
 
-        mockMvc.perform(post("/autores")
+        MvcResult autorResult = mockMvc.perform(post("/autores")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(autorJson))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andReturn();
 
-        // Depois cria um livro vinculado ao autor
-        String livroJson = """
+        int autorId = JsonPath.read(autorResult.getResponse().getContentAsString(), "$.id");
+
+        // cria livro vinculado ao autor
+        String livroJson = String.format("""
             {
-              "titulo": "Dom Casmurro",
-              "anoPublicacao": 1899,
+              "titulo": "Livro Teste Edicao",
+              "anoPublicacao": 2024,
               "lingua": "Português",
               "autores": [
-                { "id": 1 }
+                { "id": %d }
               ]
             }
-        """;
+        """, autorId);
 
-        mockMvc.perform(post("/livros")
+        MvcResult livroResult = mockMvc.perform(post("/livros")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(livroJson))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andReturn();
 
-        // Agora cria uma edição vinculada ao livro
-        String edicaoJson = """
+        int livroId = JsonPath.read(livroResult.getResponse().getContentAsString(), "$.id");
+
+        // cria edição vinculada ao livro
+        String edicaoJson = String.format("""
             {
-              "anoEdicao": 1900,
+              "anoEdicao": 2025,
               "preco": 49.90,
               "numPaginas": 256,
               "quantEstoque": 10,
-              "livro": { "id": 1 }
+              "livro": { "id": %d }
             }
-        """;
+        """, livroId);
 
         mockMvc.perform(post("/edicoes")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -69,15 +77,44 @@ public class EdicaoIntegrationTest {
 
     @Test
     public void deveFalharSePrecoNegativo() throws Exception {
-        String edicaoJson = """
+        // aqui também precisamos de um livro válido antes
+        String autorJson = """
             {
-              "anoEdicao": 1900,
+              "nome": "Autor Teste PrecoNegativo",
+              "paisOrigem": "Brasil"
+            }
+        """;
+
+        int autorId = JsonPath.read(mockMvc.perform(post("/autores")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(autorJson))
+                .andReturn().getResponse().getContentAsString(), "$.id");
+
+        String livroJson = String.format("""
+            {
+              "titulo": "Livro Teste PrecoNegativo",
+              "anoPublicacao": 2024,
+              "lingua": "Português",
+              "autores": [
+                { "id": %d }
+              ]
+            }
+        """, autorId);
+
+        int livroId = JsonPath.read(mockMvc.perform(post("/livros")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(livroJson))
+                .andReturn().getResponse().getContentAsString(), "$.id");
+
+        String edicaoJson = String.format("""
+            {
+              "anoEdicao": 2025,
               "preco": -10,
               "numPaginas": 200,
               "quantEstoque": 5,
-              "livro": { "id": 1 }
+              "livro": { "id": %d }
             }
-        """;
+        """, livroId);
 
         mockMvc.perform(post("/edicoes")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -87,10 +124,54 @@ public class EdicaoIntegrationTest {
 
     @Test
     public void deveRealizarVendaComSucesso() throws Exception {
-        // Realiza venda de 2 unidades da edição com id=1
-        mockMvc.perform(post("/edicoes/1/vender")
+        // cria autor, livro e edição primeiro
+        String autorJson = """
+            {
+              "nome": "Autor Teste Venda",
+              "paisOrigem": "Brasil"
+            }
+        """;
+
+        int autorId = JsonPath.read(mockMvc.perform(post("/autores")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(autorJson))
+                .andReturn().getResponse().getContentAsString(), "$.id");
+
+        String livroJson = String.format("""
+            {
+              "titulo": "Livro Teste Venda",
+              "anoPublicacao": 2024,
+              "lingua": "Português",
+              "autores": [
+                { "id": %d }
+              ]
+            }
+        """, autorId);
+
+        int livroId = JsonPath.read(mockMvc.perform(post("/livros")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(livroJson))
+                .andReturn().getResponse().getContentAsString(), "$.id");
+
+        String edicaoJson = String.format("""
+            {
+              "anoEdicao": 2025,
+              "preco": 59.90,
+              "numPaginas": 300,
+              "quantEstoque": 10,
+              "livro": { "id": %d }
+            }
+        """, livroId);
+
+        int edicaoId = JsonPath.read(mockMvc.perform(post("/edicoes")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(edicaoJson))
+                .andReturn().getResponse().getContentAsString(), "$.id");
+
+        // realiza venda de 2 unidades
+        mockMvc.perform(post("/edicoes/" + edicaoId + "/vender")
                 .param("quantidade", "2"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.quantEstoque").value(8)); // estoque inicial era 10
+                .andExpect(jsonPath("$.quantEstoque").value(8));
     }
 }

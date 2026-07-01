@@ -1,11 +1,13 @@
 package br.edu.ifsuldeminas.livraria_springboot_tdd.controller;
 
+import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -21,7 +23,7 @@ public class AutorIntegrationTest {
     public void deveCadastrarAutorComSucesso() throws Exception {
         String autorJson = """
             {
-              "nome": "José de Alencar",
+              "nome": "Autor Teste Cadastro",
               "paisOrigem": "Brasil"
             }
         """;
@@ -31,7 +33,7 @@ public class AutorIntegrationTest {
                 .content(autorJson))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.nome").value("José de Alencar"));
+                .andExpect(jsonPath("$.nome").value("Autor Teste Cadastro"));
     }
 
     @Test
@@ -43,39 +45,42 @@ public class AutorIntegrationTest {
 
     @Test
     public void deveListarLivrosDeAutor() throws Exception {
-        // Primeiro cria um autor
+        // cria autor e captura ID
         String autorJson = """
             {
-              "nome": "Machado de Assis",
+              "nome": "Autor Teste Livros",
               "paisOrigem": "Brasil"
             }
         """;
 
-        mockMvc.perform(post("/autores")
+        MvcResult autorResult = mockMvc.perform(post("/autores")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(autorJson))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andReturn();
 
-        // Depois cria um livro vinculado a esse autor
-        String livroJson = """
+        int autorId = JsonPath.read(autorResult.getResponse().getContentAsString(), "$.id");
+
+        // cria livro vinculado ao autor
+        String livroJson = String.format("""
             {
-              "titulo": "Memórias Póstumas de Brás Cubas",
-              "anoPublicacao": 1881,
+              "titulo": "Livro Teste Autor",
+              "anoPublicacao": 2024,
               "lingua": "Português",
               "autores": [
-                { "id": 1 }
+                { "id": %d }
               ]
             }
-        """;
+        """, autorId);
 
         mockMvc.perform(post("/livros")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(livroJson))
                 .andExpect(status().isOk());
 
-        // Agora lista os livros do autor
-        mockMvc.perform(get("/autores/1/livros"))
+        // lista livros do autor
+        mockMvc.perform(get("/autores/" + autorId + "/livros"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].titulo").value("Memórias Póstumas de Brás Cubas"));
+                .andExpect(jsonPath("$[0].titulo").value("Livro Teste Autor"));
     }
 }

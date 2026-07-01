@@ -1,7 +1,12 @@
 package br.edu.ifsuldeminas.livraria_springboot_tdd.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.util.List;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 
 @Entity
 @Table(name = "livros")
@@ -22,6 +27,7 @@ public class Livro {
 
     // Relacionamento com Edições (1:N)
     @OneToMany(mappedBy = "livro", cascade = CascadeType.ALL)
+    @JsonManagedReference   // aqui sim funciona (1:N)
     private List<Edicao> edicoes;
 
     // Relacionamento com Autores (N:N via Lista)
@@ -31,6 +37,7 @@ public class Livro {
         joinColumns = @JoinColumn(name = "livro_id"),
         inverseJoinColumns = @JoinColumn(name = "autor_id")
     )
+    @JsonIgnore   // evita loop na serialização
     private List<Autor> autores;
 
     // Getters e Setters
