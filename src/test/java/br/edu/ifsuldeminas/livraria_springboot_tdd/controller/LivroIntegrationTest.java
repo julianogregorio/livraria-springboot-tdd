@@ -28,17 +28,14 @@ public class LivroIntegrationTest {
             }
         """;
 
-        // cria autor e captura o ID retornado
         MvcResult result = mockMvc.perform(post("/autores")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(autorJson))
                 .andExpect(status().isOk())
                 .andReturn();
 
-        String response = result.getResponse().getContentAsString();
-        int autorId = JsonPath.read(response, "$.id");
+        int autorId = JsonPath.read(result.getResponse().getContentAsString(), "$.id");
 
-        // cria livro vinculado ao autor criado
         String livroJson = String.format("""
             {
               "titulo": "Dom Casmurro",
@@ -59,7 +56,6 @@ public class LivroIntegrationTest {
 
     @Test
     public void deveListarAutoresDeLivro() throws Exception {
-        // cria autor
         String autorJson = """
             {
               "nome": "Autor Teste Listagem",
@@ -67,15 +63,11 @@ public class LivroIntegrationTest {
             }
         """;
 
-        MvcResult result = mockMvc.perform(post("/autores")
+        int autorId = JsonPath.read(mockMvc.perform(post("/autores")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(autorJson))
-                .andExpect(status().isOk())
-                .andReturn();
+                .andReturn().getResponse().getContentAsString(), "$.id");
 
-        int autorId = JsonPath.read(result.getResponse().getContentAsString(), "$.id");
-
-        // cria livro vinculado ao autor
         String livroJson = String.format("""
             {
               "titulo": "Memórias Póstumas de Brás Cubas",
@@ -87,17 +79,68 @@ public class LivroIntegrationTest {
             }
         """, autorId);
 
-        MvcResult livroResult = mockMvc.perform(post("/livros")
+        int livroId = JsonPath.read(mockMvc.perform(post("/livros")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(livroJson))
-                .andExpect(status().isOk())
-                .andReturn();
+                .andReturn().getResponse().getContentAsString(), "$.id");
 
-        int livroId = JsonPath.read(livroResult.getResponse().getContentAsString(), "$.id");
-
-        // lista autores do livro criado
         mockMvc.perform(get("/livros/" + livroId + "/autores"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].nome").value("Autor Teste Listagem"));
+    }
+
+    @Test
+    public void naoDevePermitirLivroSemAutores() throws Exception {
+        String livroJson = """
+            {
+              "titulo": "Livro Sem Autor",
+              "anoPublicacao": 2024,
+              "lingua": "Português",
+              "autores": []
+            }
+        """;
+
+        mockMvc.perform(post("/livros")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(livroJson))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void naoDevePermitirLivroDuplicado() throws Exception {
+        String autorJson = """
+            {
+              "nome": "Autor Teste Duplicado",
+              "paisOrigem": "Brasil"
+            }
+        """;
+
+        int autorId = JsonPath.read(mockMvc.perform(post("/autores")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(autorJson))
+                .andReturn().getResponse().getContentAsString(), "$.id");
+
+        String livroJson = String.format("""
+            {
+              "titulo": "Livro Duplicado",
+              "anoPublicacao": 2024,
+              "lingua": "Português",
+              "autores": [
+                { "id": %d }
+              ]
+            }
+        """, autorId);
+
+        // cria livro
+        mockMvc.perform(post("/livros")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(livroJson))
+                .andExpect(status().isOk());
+
+        // tenta criar novamente com mesmo título
+        mockMvc.perform(post("/livros")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(livroJson))
+                .andExpect(status().isConflict());
     }
 }

@@ -1,6 +1,5 @@
 package br.edu.ifsuldeminas.livraria_springboot_tdd.controller;
 
-import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -8,9 +7,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import com.jayway.jsonpath.JsonPath;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -82,5 +84,27 @@ public class AutorIntegrationTest {
         mockMvc.perform(get("/autores/" + autorId + "/livros"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].titulo").value("Livro Teste Autor"));
+    }
+
+    @Test
+    public void naoDevePermitirAutorDuplicado() throws Exception {
+        String autorJson = """
+            {
+              "nome": "Autor Duplicado",
+              "paisOrigem": "Brasil"
+            }
+        """;
+
+        // cria autor
+        mockMvc.perform(post("/autores")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(autorJson))
+                .andExpect(status().isOk());
+
+        // tenta criar novamente com mesmo nome
+        mockMvc.perform(post("/autores")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(autorJson))
+                .andExpect(status().isConflict());
     }
 }

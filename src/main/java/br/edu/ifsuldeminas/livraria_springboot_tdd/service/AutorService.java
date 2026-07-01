@@ -1,11 +1,12 @@
 package br.edu.ifsuldeminas.livraria_springboot_tdd.service;
 
-import org.springframework.stereotype.Service;
-import org.springframework.beans.factory.annotation.Autowired;
-import java.util.List;
 import br.edu.ifsuldeminas.livraria_springboot_tdd.model.Autor;
 import br.edu.ifsuldeminas.livraria_springboot_tdd.model.Livro;
 import br.edu.ifsuldeminas.livraria_springboot_tdd.repository.AutorRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class AutorService {
@@ -14,7 +15,7 @@ public class AutorService {
     private AutorRepository autorRepository;
 
     public Autor salvar(Autor autor) {
-        if (autorRepository.existsByNome(autor.getNome())) {
+        if (autorRepository.findByNome(autor.getNome()).isPresent()) {
             throw new RuntimeException("Autor já existente!");
         }
         return autorRepository.save(autor);
@@ -29,9 +30,22 @@ public class AutorService {
                 .orElseThrow(() -> new RuntimeException("Autor não encontrado!"));
     }
 
-    // 🔹 Listar todos os livros de um autor
-    public List<Livro> listarLivrosDoAutor(Integer autorId) {
-        Autor autor = buscarPorId(autorId);
+    public List<Livro> listarLivrosDoAutor(Integer id) {
+        Autor autor = buscarPorId(id);
         return autor.getLivros();
+    }
+
+    // 🔹 Atualizar autor
+    public Autor atualizar(Integer id, Autor autorAtualizado) {
+        Autor autor = buscarPorId(id);
+        autor.setNome(autorAtualizado.getNome());
+        autor.setPaisOrigem(autorAtualizado.getPaisOrigem());
+        return autorRepository.save(autor);
+    }
+
+    // 🔹 Deletar autor
+    public void deletar(Integer id) {
+        Autor autor = buscarPorId(id);
+        autorRepository.delete(autor);
     }
 }

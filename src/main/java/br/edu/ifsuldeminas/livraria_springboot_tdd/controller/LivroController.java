@@ -1,12 +1,13 @@
 package br.edu.ifsuldeminas.livraria_springboot_tdd.controller;
 
-import org.springframework.web.bind.annotation.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import java.util.List;
 import br.edu.ifsuldeminas.livraria_springboot_tdd.model.Livro;
-import br.edu.ifsuldeminas.livraria_springboot_tdd.model.Autor;
-import br.edu.ifsuldeminas.livraria_springboot_tdd.model.Edicao;
 import br.edu.ifsuldeminas.livraria_springboot_tdd.service.LivroService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/livros")
@@ -17,28 +18,39 @@ public class LivroController {
 
     @PostMapping
     public Livro criar(@RequestBody Livro livro) {
-        return livroService.salvar(livro);
+        try {
+            return livroService.salvar(livro);
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("Título já existente")) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage());
+            }
+            if (e.getMessage().contains("pelo menos um autor")) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+            }
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
     }
 
     @GetMapping
-    public List<Livro> listar() {
+    public List<Livro> listarTodos() {
         return livroService.listarTodos();
     }
 
     @GetMapping("/{id}")
-    public Livro buscar(@PathVariable Integer id) {
-        return livroService.buscarPorId(id);
+    public Livro buscarPorId(@PathVariable Integer id) {
+        try {
+            return livroService.buscarPorId(id);
+        } catch (RuntimeException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
     }
 
-    // 🔹 Listar todos os autores de um livro
     @GetMapping("/{id}/autores")
-    public List<Autor> listarAutores(@PathVariable Integer id) {
-        return livroService.listarAutoresDoLivro(id);
-    }
-
-    // 🔹 Listar todas as edições de um livro
-    @GetMapping("/{id}/edicoes")
-    public List<Edicao> listarEdicoes(@PathVariable Integer id) {
-        return livroService.listarEdicoesDoLivro(id);
+    public List<?> listarAutoresDeLivro(@PathVariable Integer id) {
+        try {
+            return livroService.listarAutoresDeLivro(id);
+        } catch (RuntimeException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
+        }
     }
 }
