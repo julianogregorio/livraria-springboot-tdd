@@ -16,6 +16,9 @@ public class EdicaoService {
         if (edicao.getQuantEstoque() < 0) {
             throw new RuntimeException("Estoque não pode ser negativo!");
         }
+        if (edicao.getPreco() == null || edicao.getPreco() <= 0) {
+            throw new RuntimeException("Preço deve ser positivo!");
+        }
         return edicaoRepository.save(edicao);
     }
 
@@ -26,5 +29,18 @@ public class EdicaoService {
     public Edicao buscarPorId(Integer id) {
         return edicaoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Edição não encontrada!"));
+    }
+
+    // 🔹 Lógica de venda (estoque decrementa)
+    public Edicao vender(Integer id, int quantidade) {
+        Edicao edicao = buscarPorId(id);
+        if (quantidade <= 0) {
+            throw new RuntimeException("Quantidade de venda deve ser positiva!");
+        }
+        if (edicao.getQuantEstoque() < quantidade) {
+            throw new RuntimeException("Estoque insuficiente!");
+        }
+        edicao.setQuantEstoque(edicao.getQuantEstoque() - quantidade);
+        return edicaoRepository.save(edicao);
     }
 }

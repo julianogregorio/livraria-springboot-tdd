@@ -27,4 +27,10 @@ public class EdicaoController {
     public Edicao buscar(@PathVariable Integer id) {
         return edicaoService.buscarPorId(id);
     }
+
+    // 🔹 Realizar venda de uma edição
+    @PostMapping("/{id}/vender")
+    public Edicao vender(@PathVariable Integer id, @RequestParam int quantidade) {
+        return edicaoService.vender(id, quantidade);
+    }
 }
