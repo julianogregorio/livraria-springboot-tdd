@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import java.util.List;
 import br.edu.ifsuldeminas.livraria_springboot_tdd.model.Autor;
+import br.edu.ifsuldeminas.livraria_springboot_tdd.model.Livro;
 import br.edu.ifsuldeminas.livraria_springboot_tdd.repository.AutorRepository;
 
 @Service
@@ -26,5 +27,11 @@ public class AutorService {
     public Autor buscarPorId(Integer id) {
         return autorRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Autor não encontrado!"));
+    }
+
+    // 🔹 Listar todos os livros de um autor
+    public List<Livro> listarLivrosDoAutor(Integer autorId) {
+        Autor autor = buscarPorId(autorId);
+        return autor.getLivros();
     }
 }
