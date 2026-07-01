@@ -57,7 +57,6 @@ public class EdicaoService {
         return edicaoRepository.save(edicao);
     }
 
-    // 🔹 Atualizar edição
     public Edicao atualizar(Integer id, Edicao edicaoAtualizada) {
         Edicao edicao = buscarPorId(id);
 
@@ -75,7 +74,6 @@ public class EdicaoService {
         return edicaoRepository.save(edicao);
     }
 
-    // 🔹 Deletar edição
     public void deletar(Integer id) {
         Edicao edicao = buscarPorId(id);
         edicaoRepository.delete(edicao);

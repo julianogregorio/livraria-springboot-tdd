@@ -1,12 +1,13 @@
 package br.edu.ifsuldeminas.livraria_springboot_tdd.service;
 
-import br.edu.ifsuldeminas.livraria_springboot_tdd.model.Autor;
-import br.edu.ifsuldeminas.livraria_springboot_tdd.model.Livro;
-import br.edu.ifsuldeminas.livraria_springboot_tdd.repository.AutorRepository;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import br.edu.ifsuldeminas.livraria_springboot_tdd.model.Autor;
+import br.edu.ifsuldeminas.livraria_springboot_tdd.model.Livro;
+import br.edu.ifsuldeminas.livraria_springboot_tdd.repository.AutorRepository;
 
 @Service
 public class AutorService {
@@ -35,7 +36,6 @@ public class AutorService {
         return autor.getLivros();
     }
 
-    // 🔹 Atualizar autor
     public Autor atualizar(Integer id, Autor autorAtualizado) {
         Autor autor = buscarPorId(id);
         autor.setNome(autorAtualizado.getNome());
@@ -43,7 +43,6 @@ public class AutorService {
         return autorRepository.save(autor);
     }
 
-    // 🔹 Deletar autor
     public void deletar(Integer id) {
         Autor autor = buscarPorId(id);
         autorRepository.delete(autor);

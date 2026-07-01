@@ -1,8 +1,20 @@
 package br.edu.ifsuldeminas.livraria_springboot_tdd.model;
 
-import jakarta.persistence.*;
 import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "livros")
@@ -21,12 +33,10 @@ public class Livro {
     @Column(nullable = false, length = 45)
     private String lingua;
 
-    // Relacionamento com Edições (1:N)
     @OneToMany(mappedBy = "livro", cascade = CascadeType.ALL)
-    @JsonManagedReference   // evita loop na serialização
+    @JsonManagedReference   
     private List<Edicao> edicoes;
 
-    // Relacionamento com Autores (N:N)
     @ManyToMany
     @JoinTable(
         name = "livro_autor",
@@ -35,7 +45,6 @@ public class Livro {
     )
     private List<Autor> autores;
 
-    // Getters e Setters
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
 

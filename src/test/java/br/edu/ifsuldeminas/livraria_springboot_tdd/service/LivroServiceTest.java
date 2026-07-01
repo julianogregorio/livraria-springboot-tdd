@@ -22,13 +22,13 @@ class LivroServiceTest {
 
     @Test
     void naoDevePermitirTituloDuplicado() {
-        // 🔹 Criar e salvar autor primeiro
+        // criar e salvar autor primeiro
         Autor autor = new Autor();
         autor.setNome("Autor Teste");
         autor.setPaisOrigem("Brasil");
         autor = autorRepository.save(autor);
 
-        // 🔹 Primeiro livro
+        //primeiro livro
         Livro livro1 = new Livro();
         livro1.setTitulo("Título Duplicado");
         livro1.setAnoPublicacao(2024);
@@ -37,7 +37,7 @@ class LivroServiceTest {
 
         livroService.salvar(livro1);
 
-        // 🔹 Segundo livro com mesmo título
+        //segundo livro com mesmo título
         Livro livro2 = new Livro();
         livro2.setTitulo("Título Duplicado");
         livro2.setAnoPublicacao(2025);
